@@ -20,7 +20,7 @@ var // https://github.com/caolan/async
 var nominatimLimiter = new RateLimiter(argv.throttle, 'second');
 
 // Uses OSM's Nominatim service to get the latitude and longitude of the best
-// match for searchString
+// match for searchString http://wiki.openstreetmap.org/wiki/Nominatim
 var getLatLon = function (searchString, callback) {
 	nominatimLimiter.removeTokens(1, function() {
 		request.get({
@@ -67,7 +67,7 @@ var fetchCorpus = function (callback) {
 					callback(null, item);
 				});
 			}, function (err, results) {
-				console.log("\nCompleted. Success rate " + (successCount / array.length).toFixed(0) + "%.");
+				console.log("\nCompleted. Success rate " + (successCount / array.length * 100).toFixed(0) + "%.");
 				callback(err, results);
 			});
 		});
