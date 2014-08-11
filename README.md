@@ -3,7 +3,11 @@ Open Rail Performance Index
 
 ##orpi-corpus
 
-The objective of orpi-corpus is to save for reference [Network Rail Open Data (NROD) feeds](http://www.networkrail.co.uk/data-feeds/)'s reference ["corpus"](http://nrodwiki.rockshore.net/index.php/ReferenceData#CORPUS:_Location_Reference_Data).
+The objective of *orpi-corpus* is to save for reference the stations listed within [Network Rail Open Data (NROD) feeds](http://www.networkrail.co.uk/data-feeds/)'s reference ["corpus"](http://nrodwiki.rockshore.net/index.php/ReferenceData#CORPUS:_Location_Reference_Data). Stations are recognised from all other locations as they have both a 'STANOX' and '3ALPHA' code.
+
+The data is then enriched by the location of the stations as resolved using Open Street Map's [Nominatim](http://wiki.openstreetmap.org/wiki/Nominatim) service. At the moment of writing, ~83% of stations have a match.
+
+Finally, the data is saved as a CSV file.
 
 ###Licence
 
