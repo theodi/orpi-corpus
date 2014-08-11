@@ -26,7 +26,7 @@ var getLatLon = function (searchString, callback) {
 	nominatimLimiter.removeTokens(1, function() {
 		request.get({
 				'url': 'http://nominatim.openstreetmap.org/search', 
-				'headers': { 'User-Agent': 'orpi-corpus/0.0.1 (+https://github.com/theodi/orpi-corpus)'},
+				'headers': { 'User-Agent': process.env.USER_AGENT },
 				'qs': { 'format': 'json', 'q': searchString },
 				'json': false
 			},
