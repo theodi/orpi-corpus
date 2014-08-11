@@ -17,7 +17,8 @@ var // https://github.com/caolan/async
 		.argv,
 	zlib = require('zlib');
 
-var nominatimLimiter = new RateLimiter(argv.throttle, 'second');
+// No more than 1 request per second! http://wiki.openstreetmap.org/wiki/Nominatim_usage_policy
+var nominatimLimiter = new RateLimiter(Math.max(1, parseFloat(argv.throttle)), 'second');
 
 // Uses OSM's Nominatim service to get the latitude and longitude of the best
 // match for searchString http://wiki.openstreetmap.org/wiki/Nominatim
@@ -25,10 +26,12 @@ var getLatLon = function (searchString, callback) {
 	nominatimLimiter.removeTokens(1, function() {
 		request.get({
 				'url': 'http://nominatim.openstreetmap.org/search', 
+				'headers': { 'User-Agent': 'orpi-corpus/0.0.1 (+https://github.com/theodi/orpi-corpus/issues)'},
 				'qs': { 'format': 'json', 'q': searchString },
 				'json': true
 			},
 			function (error, response, body) {
+				console.log(body);
 				if (error) {
 					callback(error);
 					return;
@@ -83,6 +86,7 @@ var fetchCorpus = function (callback) {
 	 	});	
 }
 
+/*
 fetchCorpus(function (err, corpus) {
 	csv()
 		.from.array(corpus)
@@ -90,4 +94,7 @@ fetchCorpus(function (err, corpus) {
 		.to.options({ 'header': true, 'columns': Object.keys(corpus[0]).sort() })
 		.on('end', function () { console.log('Done'); });
 });
-
+*/
+getLatLon("KING'S CROSS LONDON railway station", function (err, result) {
+	console.log(result);
+});
