@@ -26,15 +26,19 @@ var getLatLon = function (searchString, callback) {
 	nominatimLimiter.removeTokens(1, function() {
 		request.get({
 				'url': 'http://nominatim.openstreetmap.org/search', 
-				'headers': { 'User-Agent': 'orpi-corpus/0.0.1 (+https://github.com/theodi/orpi-corpus/issues)'},
+				'headers': { 'User-Agent': 'orpi-corpus/0.0.1 (+https://github.com/theodi/orpi-corpus)'},
 				'qs': { 'format': 'json', 'q': searchString },
-				'json': true
+				'json': false
 			},
 			function (error, response, body) {
-				console.log(body);
 				if (error) {
 					callback(error);
 					return;
+				}
+				try {
+					body = JSON.parse(body);
+				} catch(err) {
+					throw new Error("Nominatim did not return valid JSON content. Perhaps you broke the usage policy? Aborting.");
 				}
 				if (body.length === 0) {
 					// the call to the API could not find anything
@@ -86,15 +90,10 @@ var fetchCorpus = function (callback) {
 	 	});	
 }
 
-/*
 fetchCorpus(function (err, corpus) {
 	csv()
 		.from.array(corpus)
 		.to(argv.out)
 		.to.options({ 'header': true, 'columns': Object.keys(corpus[0]).sort() })
-		.on('end', function () { console.log('Done'); });
-});
-*/
-getLatLon("KING'S CROSS LONDON railway station", function (err, result) {
-	console.log(result);
+		.on('end', function () { console.log('Data written to ' + argv.out + '.'); });
 });
