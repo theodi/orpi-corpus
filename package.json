@@ -1,0 +1,25 @@
+{
+  "name": "orpi-corpus",
+  "version": "0.0.1",
+  "description": "TBD",
+  "main": "main.js",
+  "engines": {
+    "node": "0.10.30"
+  },
+  "dependencies": {
+    "event-stream": "^3.1.7",
+    "request": "^2.39.0"
+  },
+  "devDependencies": {},
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Contraptions-Imaginarium/open-rail-performance-index.git"
+  },
+  "author": "Gianfranco Cecconi <giacecco@dico.im>",
+  "license": "Creative Commons BY-SA 4.0 International",
+  "bugs": {
+    "url": "https://github.com/Digital-Contraptions-Imaginarium/open-rail-performance-index/issues"
+  },
+  "homepage": "https://github.com/Digital-Contraptions-Imaginarium/open-rail-performance-index"
+}
