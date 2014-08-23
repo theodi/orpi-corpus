@@ -74,8 +74,9 @@ var fetchORRStationUsage = function (callback) {
 
 // fetches the corpus, filters out items that have no STANOX or 3ALPHA valies
 // and integrates with latitude and longitude
-var fetchNRCorpus = function (relevant3Alpha, callback) {
-	var successCount = 0,
+var fetchNRCorpus = function (orrStations, callback) {
+	var relevant3Alpha = _.keys(orrStations),
+		successCount = 0,
 		gunzip = zlib.createGunzip(),
 		data = es.writeArray(function (err, array) {
 			array = JSON.parse(array.join(''))
@@ -85,9 +86,12 @@ var fetchNRCorpus = function (relevant3Alpha, callback) {
 				    // a stanox code, b) don't have a 3alpha code and c) whose
 				    // 3alpha code is not included in the specified list of
 				    // relevant3Alpha 
-					return (entry.STANOX !== ' ') && (relevant3Alpha.indexOf(entry["3ALPHA"]) > -1);
+					return((entry.STANOX !== ' ') && _.contains(relevant3Alpha, entry["3ALPHA"]));
 			});
 			async.map(array, function (item, callback) {
+				// add to the station the data from the ORR file
+				item = _.extend(item, orrStations[item["3ALPHA"]]);
+				// add latitude and longitude
 				getLatLon(item.NLCDESC + " railway station", function (err, latLon) {
 					if(!err) {
 						successCount++;
@@ -118,17 +122,10 @@ var fetchNRCorpus = function (relevant3Alpha, callback) {
 
 fetchORRStationUsage(function (err, orrStations) {
 	fetchNRCorpus(
-		// gets the relevant stations' 3 letter codes from the ORR station usage
-		// data...
-		_.keys(orrStations), 
-		// ... and uses it to filter the NR corpus
+		orrStations, 
 		function (err, corpus) {
 			csv()
 				.from.array(corpus)
-				.transform(function (row) {
-					// integrates the rest of the data from the ORR file
-					return(_.extend(row, orrStations[row["3ALPHA"]]));
-				})
 				.to(argv.out)
 				.to.options({ 'header': true, 'columns': Object.keys(corpus[0]).sort() })
 				.on('end', function () { 
