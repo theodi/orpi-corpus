@@ -58,18 +58,21 @@ var getLatLon = function (searchString, callback) {
 var fetchORRStationUsage = function (callback) {
 	csv()
 		.from.path('./data/ORR-station-usage-2012-13.csv', { 'columns': true })
-		.transform(function (row) { return row['Origin TLC'] ? row : undefined; })
+		.transform(function (row) { 
+				delete row['']; // for empty columns
+				return row['Origin TLC'] ? row : undefined; // for empty rows 
+			})
 		.to.array(function (data) {
-			var dataAsHash = { },
-				originTlc;
-			data.forEach(function (station) { 
-				// moves the 'Origin TLC' property from the record to its key
-				originTlc = station['Origin TLC'];
-				delete station['Origin TLC'];
-				dataAsHash[originTlc] = station; 
-			}); 
-			callback(null, dataAsHash); 
-		});	
+				var dataAsHash = { },
+					originTlc;
+				data.forEach(function (station) { 
+					// moves the 'Origin TLC' property from the record to its key
+					originTlc = station['Origin TLC'];
+					delete station['Origin TLC'];
+					dataAsHash[originTlc] = station; 
+				}); 
+				callback(null, dataAsHash); 
+			});	
 }
 
 // fetches the corpus, filters out items that have no STANOX or 3ALPHA valies
