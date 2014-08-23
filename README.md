@@ -5,7 +5,11 @@ Open Rail Performance Index
 
 The objective of *orpi-corpus* is to save for reference the stations listed within [Network Rail Open Data (NROD) feeds](http://www.networkrail.co.uk/data-feeds/)'s reference ["corpus"](http://nrodwiki.rockshore.net/index.php/ReferenceData#CORPUS:_Location_Reference_Data). Stations are recognised from all other locations as they have both a 'STANOX' and '3ALPHA' code.
 
-The data is then enriched by the location of the stations as resolved using Open Street Map's [Nominatim](http://wiki.openstreetmap.org/wiki/Nominatim) service. At the moment of writing, ~83% of stations have a match.
+You need to have a Network Rail Open Data account for the script to work. Save your credentials either as environmnent variables (NROD_USERNAME and NROD_PASSWORD) or using an *.env* file and calling the script with:
+
+    foreman run node main.js --out corpus-new.csv 
+
+The data is also enriched by the location of the stations as resolved using Open Street Map's [Nominatim](http://wiki.openstreetmap.org/wiki/Nominatim) service. At the moment of writing, ~83% of points listed in the corpus have a match. Please note that Nominatim also requires you to state some degree of identity for your script by using dedicated content in the HTTP user agent header. Please read their full documentation. During development we used "orpi-corpus/0.0.1 (+https://github.com/theodi/orpi-corpus)". For the script to work, this must be available in the environment variable USER_AGENT.
 
 Finally, the data is saved as a CSV file.
 
