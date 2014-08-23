@@ -95,7 +95,20 @@ var fetchNRCorpus = function (orrStations, callback) {
 				// " railway station" to the station name and then without
 				var latLon = undefined;
 				async.detectSeries(
-					[ item['Station Name'] + " railway station", item['Station Name'] ],
+					[ 
+					  // first I try by adding 'railway station'
+					  item['Station Name'] + ' railway station, ' + 
+						  item['County or Unitary Authority'] + ', uk',
+					  // then by removing the stuff in brackets and adding 
+					  // 'railway station' 
+					  item['Station Name'].replace(/ *\([^)]*\) */g, "") + 
+					      ' railway station, ' + 
+					      item['County or Unitary Authority'] + ', uk',
+					  // then by using just the ORR station names, that will
+					  // likely give me the latlon of the town rather than the
+					  // station
+					  item['Station Name'] + ', ' + 
+					  	  item['County or Unitary Authority'] + ', uk' ],
 					function (searchString, callback) {
 						getLatLon(searchString, function (err, _latLon) {
 							latLon = err ? undefined : _latLon;
