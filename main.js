@@ -92,14 +92,14 @@ var fetchNRCorpus = function (orrStations, callback) {
 				// add to the station the data from the ORR file
 				item = _.extend(item, orrStations[item["3ALPHA"]]);
 				// add latitude and longitude
-				getLatLon(item.NLCDESC + " railway station", function (err, latLon) {
+				getLatLon(item['Station Name'] + " railway station", function (err, latLon) {
 					if(!err) {
 						successCount++;
 						process.stdout.write('.');
 						item.LAT = latLon.lat;
 						item.LON = latLon.lon;
 					} else {
-						process.stdout.write("\nLat/lon resolution failed for " + item.NLCDESC);
+						process.stdout.write("\nLat/lon resolution failed for " + item['Station Name'];
 					}
 					callback(null, item);
 				});
