@@ -87,21 +87,31 @@ var fetchNRCorpus = function (orrStations, callback) {
 				    // 3alpha code is not included in the specified list of
 				    // relevant3Alpha 
 					return((entry.STANOX !== ' ') && _.contains(relevant3Alpha, entry["3ALPHA"]));
-			});
-			async.map(array, function (item, callback) {
+				});
+			async.mapSeries(array, function (item, callback) {
 				// add to the station the data from the ORR file
 				item = _.extend(item, orrStations[item["3ALPHA"]]);
-				// add latitude and longitude
-				getLatLon(item['Station Name'] + " railway station", function (err, latLon) {
-					if(!err) {
-						successCount++;
-						process.stdout.write('.');
-						item.LAT = latLon.lat;
-						item.LON = latLon.lon;
-					} else {
-						process.stdout.write("\nLat/lon resolution failed for " + item['Station Name'];
-					}
-					callback(null, item);
+				// add latitude and longitude, trying first by adding 
+				// " railway station" to the station name and then without
+				var latLon = undefined;
+				async.detectSeries(
+					[ item['Station Name'] + " railway station", item['Station Name'] ],
+					function (searchString, callback) {
+						getLatLon(searchString, function (err, _latLon) {
+							latLon = err ? undefined : _latLon;
+							callback(!err);
+						});
+					},
+					function (found) {
+						if(found) {
+							successCount++;
+							item.LAT = latLon.lat;
+							item.LON = latLon.lon;
+							process.stdout.write(".");
+						} else {
+							process.stdout.write("\nLat/lon resolution failed for " + item['Station Name']);
+						}						
+						callback(null, item);
 				});
 			}, function (err, results) {
 				console.log("\nCompleted. Success rate " + (successCount / array.length * 100).toFixed(0) + "%.");
