@@ -15,7 +15,9 @@ var // https://github.com/caolan/async
 		.demand([ 'out' ])
 		.default('throttle', 1)
 		.argv,
-	zlib = require('zlib');
+	zlib = require('zlib'),
+	// http://underscorejs.org/
+	_ = require('underscore');
 
 // No more than 1 request per second! http://wiki.openstreetmap.org/wiki/Nominatim_usage_policy
 var nominatimLimiter = new RateLimiter(Math.max(1, parseFloat(argv.throttle)), 'second');
@@ -50,16 +52,40 @@ var getLatLon = function (searchString, callback) {
 	});
 };
 
+// fetch the station data as published by ORR at 
+// http://orr.gov.uk/statistics/published-stats/station-usage-estimates
+// and returns it as a hash with the 'Origin TLC' as key
+var fetchORRStationUsage = function (callback) {
+	csv()
+		.from.path('./data/ORR-station-usage-2012-13.csv', { 'columns': true })
+		.transform(function (row) { return row['Origin TLC'] ? row : undefined; })
+		.to.array(function (data) {
+			var dataAsHash = { },
+				originTlc;
+			data.forEach(function (station) { 
+				// moves the 'Origin TLC' property from the record to its key
+				originTlc = station['Origin TLC'];
+				delete station['Origin TLC'];
+				dataAsHash[originTlc] = station; 
+			}); 
+			callback(null, dataAsHash); 
+		});	
+}
+
 // fetches the corpus, filters out items that have no STANOX or 3ALPHA valies
 // and integrates with latitude and longitude
-var fetchCorpus = function (callback) {
+var fetchNRCorpus = function (relevant3Alpha, callback) {
 	var successCount = 0,
 		gunzip = zlib.createGunzip(),
 		data = es.writeArray(function (err, array) {
 			array = JSON.parse(array.join(''))
 				.TIPLOCDATA
 				.filter(function (entry) {
-					return (entry.STANOX !== ' ') && (entry["3ALPHA"] !== ' ');
+					// drop all points defined in the corpus that a) don't have
+				    // a stanox code, b) don't have a 3alpha code and c) whose
+				    // 3alpha code is not included in the specified list of
+				    // relevant3Alpha 
+					return (entry.STANOX !== ' ') && (relevant3Alpha.indexOf(entry["3ALPHA"]) > -1);
 			});
 			async.map(array, function (item, callback) {
 				getLatLon(item.NLCDESC + " railway station", function (err, latLon) {
@@ -90,10 +116,24 @@ var fetchCorpus = function (callback) {
 	 	});	
 }
 
-fetchCorpus(function (err, corpus) {
-	csv()
-		.from.array(corpus)
-		.to(argv.out)
-		.to.options({ 'header': true, 'columns': Object.keys(corpus[0]).sort() })
-		.on('end', function () { console.log('Data written to ' + argv.out + '.'); });
+fetchORRStationUsage(function (err, orrStations) {
+	fetchNRCorpus(
+		// gets the relevant stations' 3 letter codes from the ORR station usage
+		// data...
+		_.keys(orrStations), 
+		// ... and uses it to filter the NR corpus
+		function (err, corpus) {
+			csv()
+				.from.array(corpus)
+				.transform(function (row) {
+					// integrates the rest of the data from the ORR file
+					return(_.extend(row, orrStations[row["3ALPHA"]]));
+				})
+				.to(argv.out)
+				.to.options({ 'header': true, 'columns': Object.keys(corpus[0]).sort() })
+				.on('end', function () { 
+					console.log('Data written to ' + argv.out + '.'); 
+				});
+		}
+	);
 });
