@@ -137,7 +137,7 @@ var fetchNRCorpus = function (orrStations, callback) {
 						callback(null, item);
 				});
 			}, function (err, results) {
-				process.stderr.write("\nCompleted. Success rate " + (successCount / array.length * 100).toFixed(0) + "%.\n");
+				process.stderr.write("\nCompleted. Success rate " + (successCount / array.length * 100).toFixed(1) + "%.\n");
 				callback(err, results);
 			});
 		});
