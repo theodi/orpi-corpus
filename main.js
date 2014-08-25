@@ -22,7 +22,7 @@ var // https://github.com/caolan/async
 	_ = require('underscore');
 
 // No more than 1 request per second! http://wiki.openstreetmap.org/wiki/Nominatim_usage_policy
-var nominatimLimiter = new RateLimiter(Math.max(1.5, parseFloat(argv.throttle)), 'second');
+var nominatimLimiter = new RateLimiter(Math.max(1, parseFloat(argv.throttle)), 'second');
 
 // Uses OSM's Nominatim service to get the latitude and longitude of the best
 // match for searchString http://wiki.openstreetmap.org/wiki/Nominatim
@@ -100,7 +100,7 @@ var fetchNRCorpus = function (orrStations, callback) {
 				// " railway station" to the station name and then without
 				var latLon = undefined;
 				async.detectSeries(
-					[ 
+					_.unique([ 
 					  // first I try by adding 'railway station'
 					  item['Station Name'] + ' railway station, ' + 
 						  item['County or Unitary Authority'] + ', uk',
@@ -113,7 +113,12 @@ var fetchNRCorpus = function (orrStations, callback) {
 					  // likely give me the latlon of the town rather than the
 					  // station
 					  item['Station Name'] + ', ' + 
-					  	  item['County or Unitary Authority'] + ', uk' ],
+					  	  item['County or Unitary Authority'] + ', uk' ,
+					  // last resort, the station name only; stations like 
+					  // "StewartBy" or "Bedford St.Johns" can be found only 
+					  // this way
+					  item['Station Name'] + ', uk', 
+					]),
 					function (searchString, callback) {
 						getLatLon(searchString, function (err, _latLon) {
 							latLon = err ? undefined : _latLon;
