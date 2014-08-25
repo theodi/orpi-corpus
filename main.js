@@ -11,8 +11,10 @@ var // https://github.com/caolan/async
 	request = require('request'),
 	// https://github.com/chevex/yargs
 	argv = require('yargs')
-		.usage('Usage: --out <filename> [--throttle <requests per second>]')
-		.demand([ 'out' ])
+		.usage('Usage: --orr <ORR station usage filename> --out <filename> [--throttle <requests per second>]')
+		.demand([ 'orr', 'out' ])
+		.default('out', '/dev/stdout')
+		.default('orr', './data/ORR-station-usage-2012-13.csv')
 		.default('throttle', 1)
 		.argv,
 	zlib = require('zlib'),
@@ -20,7 +22,7 @@ var // https://github.com/caolan/async
 	_ = require('underscore');
 
 // No more than 1 request per second! http://wiki.openstreetmap.org/wiki/Nominatim_usage_policy
-var nominatimLimiter = new RateLimiter(Math.max(1, parseFloat(argv.throttle)), 'second');
+var nominatimLimiter = new RateLimiter(Math.max(1.5, parseFloat(argv.throttle)), 'second');
 
 // Uses OSM's Nominatim service to get the latitude and longitude of the best
 // match for searchString http://wiki.openstreetmap.org/wiki/Nominatim
@@ -57,7 +59,7 @@ var getLatLon = function (searchString, callback) {
 // and returns it as a hash with the 'Origin TLC' as key
 var fetchORRStationUsage = function (callback) {
 	csv()
-		.from.path('./data/ORR-station-usage-2012-13.csv', { 'columns': true })
+		.from.path(argv.orr, { 'columns': true })
 		.transform(function (row) { 
 				delete row['']; // for empty columns
 				return row['Origin TLC'] ? row : undefined; // for empty rows 
@@ -123,14 +125,14 @@ var fetchNRCorpus = function (orrStations, callback) {
 							successCount++;
 							item.LAT = latLon.lat;
 							item.LON = latLon.lon;
-							process.stdout.write(".");
+							process.stderr.write(".");
 						} else {
-							process.stdout.write("\nLat/lon resolution failed for " + item['Station Name']);
+							process.stderr.write("\nLat/lon resolution failed for " + item['Station Name']);
 						}						
 						callback(null, item);
 				});
 			}, function (err, results) {
-				console.log("\nCompleted. Success rate " + (successCount / array.length * 100).toFixed(0) + "%.");
+				process.stderr.write("\nCompleted. Success rate " + (successCount / array.length * 100).toFixed(0) + "%.\n");
 				callback(err, results);
 			});
 		});
@@ -146,17 +148,25 @@ var fetchNRCorpus = function (orrStations, callback) {
 	 	});	
 }
 
-fetchORRStationUsage(function (err, orrStations) {
-	fetchNRCorpus(
-		orrStations, 
-		function (err, corpus) {
-			csv()
-				.from.array(corpus)
-				.to(argv.out)
-				.to.options({ 'header': true, 'columns': Object.keys(corpus[0]).sort() })
-				.on('end', function () { 
-					console.log('Data written to ' + argv.out + '.'); 
-				});
-		}
-	);
-});
+if (argv.nominatim) {
+	getLatLon(argv.nominatim, function (err, latLon) {
+		console.log("err is " + JSON.stringify(err));
+		console.log("latlon is " + JSON.stringify(latLon));
+	});
+} else {
+	fetchORRStationUsage(function (err, orrStations) {
+		fetchNRCorpus(
+			orrStations, 
+			function (err, corpus) {
+				csv()
+					.from.array(corpus)
+					.to(argv.out)
+					.to.options({ 'header': true, 'columns': Object.keys(corpus[0]).sort() })
+					.on('end', function () { 
+						process.stderr.write('Data written to ' + argv.out + '.\n'); 
+					});
+			}
+		);
+	});
+}
+
