@@ -3,7 +3,7 @@ library(dplyr)
 library(RCurl)
 library(rjson)
 
-CORPUS_DOWNLOAD_URL <- "https://raw.githubusercontent.com/theodi/orpi-corpus/master/corpus.csv"
+CORPUS_DOWNLOAD_URL <- "https://raw.githubusercontent.com/theodi/orpi-corpus/master/data/corpus.csv"
 FOOTFALL_DOWNLOAD_URL <- "https://raw.githubusercontent.com/theodi/orpi-analysis/master/passenger-data/footfall-stations.csv"
 
 corpus <- read.csv(text = getURL(CORPUS_DOWNLOAD_URL))
