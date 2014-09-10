@@ -18,6 +18,8 @@ The data is also enriched by the location of the stations as resolved using Open
 
 Finally, the data is saved as a CSV file.
 
+Note: the header of ORR's station usage estimate Excel file contains carriage returns; these need being removed when converting the file to CSV. 
+
 ###Licence
 
 The trains schedule and arrival data are sourced from the [Network Rail "Data Feeds" service](https://datafeeds.networkrail.co.uk). As a result, the data produced by *orpi-nrod-store* contains information of Network Rail Infrastructure Limited licensed under the following licence [http://www.networkrail.co.uk/data-feeds/terms-and-conditions/](http://www.networkrail.co.uk/data-feeds/terms-and-conditions/).
